@@ -48,9 +48,8 @@ jobs:
                 debugShowCheckedModeBanner: false,
                 theme: ThemeData(
                   primarySwatch: Colors.green,
+                  useMaterial3: true, // التصحيح الجذري هنا داخل ThemeData
                 ),
-                // تم وضعها هنا بشكل صحيح
-                useMaterialDesign: true, 
                 home: const HomeScreen(),
               );
             }
@@ -80,7 +79,7 @@ jobs:
                         padding: EdgeInsets.all(16.0),
                         child: Text(
                           'المنصة جاهزة ومبنية بنجاح عبر GitHub Actions.',
-                          textAlign: TextAlign.center, // تم تصليحها هنا
+                          textAlign: TextAlign.center,
                           style: TextStyle(color: Colors.grey),
                         ),
                       ),
@@ -140,8 +139,8 @@ jobs:
                 debugShowCheckedModeBanner: false,
                 theme: ThemeData(
                   primarySwatch: Colors.green,
+                  useMaterial3: true, // التصحيح الجذري هنا للآيفون أيضاً
                 ),
-                useMaterialDesign: true,
                 home: const HomeScreen(),
               );
             }

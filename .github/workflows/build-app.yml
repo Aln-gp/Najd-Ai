@@ -30,7 +30,7 @@ jobs:
           flutter clean
           flutter create . --platforms android --overwrite --org com.najdai
           
-          # إجبار الخادم على كتابة كود واجهة تطبيق Najd AI الصحيحة لضمان عدم ظهور واجهة فلوتر الافتراضية
+          # كتابة كود واجهة تطبيق Najd AI الصحيحة للأندرويد
           mkdir -p lib
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -109,4 +109,109 @@ jobs:
           tag_name: android-v${{ github.run_number }}
           token: ${{ secrets.GITHUB_TOKEN }}
           name: "تطبيق Najd AI - نسخة أندرويد جاهزة #${{ github.run_number }}"
+
+  build_ios:
+    name: Build iOS IPA
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Flutter Framework
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Recreate iOS Project & Build
+        run: |
+          flutter clean
+          flutter create . --platforms ios --overwrite --org com.najdai
+          
+          # كتابة كود واجهة تطبيق Najd AI الصحيحة للآيفون أيضاً
+          mkdir -p lib
+          cat << 'EOF' > lib/main.dart
+          import 'package:flutter/material.dart';
+
+          void main() {
+            runApp(const NajdAiApp());
+          }
+
+          class NajdAiApp extends StatelessWidget {
+            const NajdAiApp({super.key});
+
+            @override
+            Widget build(BuildContext context) {
+              return MaterialApp(
+                title: 'Najd AI',
+                debugShowCheckedModeBanner: false,
+                theme: ThemeData(
+                  primarySwatch: Colors.green,
+                  useMaterialDesign: true,
+                ),
+                home: const HomeScreen(),
+              );
+            }
+          }
+
+          class HomeScreen extends StatelessWidget {
+            const HomeScreen({super.key});
+
+            @override
+            Widget build(BuildContext context) {
+              return Scaffold(
+                appBar: AppBar(
+                  title: const Text('Najd AI Platform'),
+                  centerTitle: true,
+                ),
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/icon/app_icon.png',
+                        width: 120,
+                        height: 120,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(Icons.blur_on, size: 100, color: Colors.green);
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'مرحباً بك في منصة Najd AI 🚀',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Text(
+                          'المنصة جاهزة ومبنية بنجاح عبر GitHub Actions.',
+                          textAlign: Center,
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+          }
+          EOF
+          
+          flutter pub get
+          flutter build ios --release --no-codesign
+
+      - name: Bundle iOS into IPA Archive
+        run: |
+          mkdir -p build/ios/iphoneos/Payload
+          cp -r build/ios/iphoneos/Runner.app build/ios/iphoneos/Payload/
+          cd build/ios/iphoneos && zip -r user_app_ios.ipa Payload
+
+      - name: Upload IPA to GitHub Releases
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/ios/iphoneos/user_app_ios.ipa
+          tag_name: ios-v${{ github.run_number }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: "تطبيق Najd AI - نسخة آيفون جاهزة #${{ github.run_number }}"
           

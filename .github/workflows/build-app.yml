@@ -23,10 +23,18 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Clean & Build Release
+      - name: Recreate Android Project & Build
         run: |
+          # تنظيف أي كاش قديم
           flutter clean
+          
+          # [العلم المضمون] إنشاء مجلد أندرويد رسمي متكامل عشان ما يقول ملف ناقص
+          flutter create . --platforms android --overwrite --org com.blacklink.najdai
+          
+          # تحميل المكاتب المتوافقة
           flutter pub get
+          
+          # بناء نسخة الـ APK
           flutter build apk --release
 
       - name: Upload APK to GitHub Releases
@@ -49,9 +57,13 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Clean & Build iOS
+      - name: Recreate iOS Project & Build
         run: |
           flutter clean
+          
+          # إنشاء مجلد الآيفون الرسمي المتكامل تلقائياً
+          flutter create . --platforms ios --overwrite --org com.blacklink.najdai
+          
           flutter pub get
           flutter build ios --release --no-codesign
 

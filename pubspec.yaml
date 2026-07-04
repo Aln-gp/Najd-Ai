@@ -1,0 +1,38 @@
+name: najd_ai
+description: "A new Flutter project created by Najd AI."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.5
+  http: ^1.1.0
+  flutter_tts: ^3.8.3
+  image_picker: ^1.0.4
+  file_picker: ^6.1.1
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  shared_preferences: ^2.2.2
+  url_launcher: ^6.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  flutter_launcher_icons: ^0.13.1
+
+# إعدادات مسار صورتك الخاصة للتطبيق
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon/
+    

@@ -8,6 +8,8 @@ jobs:
   build_android:
     name: Build Android APK
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # إعطاء صلاحية رسمية للخادم لإنشاء الـ Releases
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -25,16 +27,9 @@ jobs:
 
       - name: Recreate Android Project & Build
         run: |
-          # تنظيف أي كاش قديم
           flutter clean
-          
-          # [العلم المضمون] إنشاء مجلد أندرويد رسمي متكامل عشان ما يقول ملف ناقص
-          flutter create . --platforms android --overwrite --org com.blacklink.najdai
-          
-          # تحميل المكاتب المتوافقة
+          flutter create . --platforms android --overwrite --org com.najdai
           flutter pub get
-          
-          # بناء نسخة الـ APK
           flutter build apk --release
 
       - name: Upload APK to GitHub Releases
@@ -42,12 +37,14 @@ jobs:
         with:
           files: build/app/outputs/flutter-apk/app-release.apk
           tag_name: android-v${{ github.run_number }}
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }} # استخدام التوكن التلقائي المضمون
           name: "تطبيق Najd AI - نسخة أندرويد جاهزة #${{ github.run_number }}"
 
   build_ios:
     name: Build iOS IPA
     runs-on: macos-latest
+    permissions:
+      contents: write # إعطاء صلاحية رسمية للخادم لإنشاء الـ Releases
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -60,10 +57,7 @@ jobs:
       - name: Recreate iOS Project & Build
         run: |
           flutter clean
-          
-          # إنشاء مجلد الآيفون الرسمي المتكامل تلقائياً
-          flutter create . --platforms ios --overwrite --org com.blacklink.najdai
-          
+          flutter create . --platforms ios --overwrite --org com.najdai
           flutter pub get
           flutter build ios --release --no-codesign
 
@@ -78,6 +72,6 @@ jobs:
         with:
           files: build/ios/iphoneos/user_app_ios.ipa
           tag_name: ios-v${{ github.run_number }}
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }} # استخدام التوكن التلقائي المضمون
           name: "تطبيق Najd AI - نسخة آيفون جاهزة #${{ github.run_number }}"
           

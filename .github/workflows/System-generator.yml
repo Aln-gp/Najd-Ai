@@ -27,58 +27,28 @@ jobs:
         with:
           channel: 'stable'
 
-      # 1. توليد المجلدات الافتراضية
-      - name: Recreate Missing Platform Folders
+      # توليد مجلد أندرويد نظيف ومتوافق 100% بمعرّف الحزمة الخاص بك com.alnofaie.najdai
+      - name: Recreate Android & iOS Folders
         run: |
-          echo "جاري توليد وإصلاح مجلدات النظام الافتراضية..."
-          flutter create . --platforms=android,ios
-
-      # 2. حقن إعدادات فايربيس (Google Services) بداخل ملفات الـ Gradle لإنهاء المشكلة
-      - name: Configure Firebase Gradle Plugins
-        run: |
-          echo "جاري تهيئة إعدادات فايربيس بملفات الـ Gradle..."
-          
-          # تعديل build.gradle الرئيسي لإضافة محرك البحث عن مكتبة قوقل
-          cat << 'EOF' > android/build.gradle
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-          rootProject.buildDir = "../build"
-          subprojects {
-              project.buildDir = "${rootProject.buildDir}/${project.name}"
-          }
-          subprojects {
-              project.evaluationDependsOn(":app")
-          }
-          tasks.register("clean", Delete) {
-              delete rootProject.buildDir
-          }
-          EOF
-
-          # تعديل build.gradle الخاص بالـ app لربط المكونات
-          sed -i '/plugins {/a \    id "com.google.gms.google-services" version "4.4.1" apply false' android/build.gradle
-          sed -i '/plugins {/a \    id "com.google.gms.google-services"' android/app/build.gradle
+          echo "جاري إعادة بناء مجلدات المنصات بالبندل الجديد..."
+          rm -rf android ios
+          flutter create . --platforms=android,ios --org com.alnofaie.najdai
 
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Build Android APK & AAB
+      # بناء الـ APK مباشرة
+      - name: Build Android APK
         run: |
           flutter build apk --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
-          flutter build appbundle --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
 
-      - name: Deploy Android Releases
+      - name: Deploy Android Release
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GH_TOKEN }}
           tag_name: "v1.0.${{ github.run_number }}"
           name: "إصدار نجد AI المعتمد رقم ${{ github.run_number }} 🛠️"
-          files: |
-            build/app/outputs/flutter-apk/app-release.apk
-            build/app/outputs/bundle/release/app-release.aab
+          files: build/app/outputs/flutter-apk/app-release.apk
 
   build-ios:
     runs-on: macos-latest
@@ -94,8 +64,10 @@ jobs:
           channel: 'stable'
           architecture: x64
 
-      - name: Recreate Missing iOS Folder
-        run: flutter create . --platforms=ios
+      - name: Recreate iOS Folder
+        run: |
+          rm -rf ios
+          flutter create . --platforms=ios --org com.alnofaie.najdai
 
       - name: Install Dependencies
         run: flutter pub get

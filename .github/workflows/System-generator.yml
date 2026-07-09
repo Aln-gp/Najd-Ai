@@ -27,11 +27,40 @@ jobs:
         with:
           channel: 'stable'
 
-      # 🛠️ الفزعة الأكيدة: إعادة توليد مجلدات النظام (android, ios) لتفادي أي نقص في الملفات
+      # 1. توليد المجلدات الافتراضية
       - name: Recreate Missing Platform Folders
         run: |
           echo "جاري توليد وإصلاح مجلدات النظام الافتراضية..."
           flutter create . --platforms=android,ios
+
+      # 2. حقن إعدادات فايربيس (Google Services) بداخل ملفات الـ Gradle لإنهاء المشكلة
+      - name: Configure Firebase Gradle Plugins
+        run: |
+          echo "جاري تهيئة إعدادات فايربيس بملفات الـ Gradle..."
+          
+          # تعديل build.gradle الرئيسي لإضافة محرك البحث عن مكتبة قوقل
+          cat << 'EOF' > android/build.gradle
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.buildDir = "../build"
+          subprojects {
+              project.buildDir = "${rootProject.buildDir}/${project.name}"
+          }
+          subprojects {
+              project.evaluationDependsOn(":app")
+          }
+          tasks.register("clean", Delete) {
+              delete rootProject.buildDir
+          }
+          EOF
+
+          # تعديل build.gradle الخاص بالـ app لربط المكونات
+          sed -i '/plugins {/a \    id "com.google.gms.google-services" version "4.4.1" apply false' android/build.gradle
+          sed -i '/plugins {/a \    id "com.google.gms.google-services"' android/app/build.gradle
 
       - name: Install Dependencies
         run: flutter pub get
@@ -65,7 +94,6 @@ jobs:
           channel: 'stable'
           architecture: x64
 
-      # 🛠️ إعادة توليد ملفات الآيفون هنا أيضاً للتأكيد لضمان عدم حدوث نقص
       - name: Recreate Missing iOS Folder
         run: flutter create . --platforms=ios
 
@@ -86,3 +114,4 @@ jobs:
           tag_name: "v1.0.${{ github.run_number }}"
           name: "إصدار نجد AI المعتمد رقم ${{ github.run_number }} 🛠️"
           files: Najd_AI_iOS.ipa
+          

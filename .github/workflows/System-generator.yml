@@ -27,23 +27,24 @@ jobs:
         with:
           channel: 'stable'
 
-      # 1. توليد المجلدات بالبندل المعتمد com.alnofaie.najdai
+      # 1. إنشاء مجلدات المشروع النظيفة بالبندل المعتمد com.alnofaie.najdai
       - name: Recreate Android & iOS Folders
         run: |
-          echo "جاري إعادة بناء مجلدات المنصات..."
           rm -rf android ios
           flutter create . --platforms=android,ios --org com.alnofaie.najdai
 
-      # 2. حقن إعدادات الـ SDK إلى 34 لحل تعارض file_picker
-      - name: Force Android SDK 34
+      # 2. ضبط توافق أندرويد بالملّي: الحد الأدنى أندرويد 6 (23) والأقصى أندرويد 16/17 (36)
+      - name: Configure Android SDK Versions
         run: |
-          echo "جاري تعديل إعدادات الـ SDK إلى 34..."
-          echo "subprojects { afterEvaluate { project -> if (project.hasProperty('android')) { project.android { compileSdk 34 } } } }" >> android/build.gradle
+          echo "جاري ضبط إصدارات الأندرويد لتدعم من إصدار 6 إلى أحدث إصدار..."
+          sed -i 's/compileSdk = .*/compileSdk = 36/g' android/app/build.gradle
+          sed -i 's/minSdk = .*/minSdk = 23/g' android/app/build.gradle
+          sed -i 's/targetSdk = .*/targetSdk = 36/g' android/app/build.gradle
 
       - name: Install Dependencies
         run: flutter pub get
 
-      # 3. بناء الـ APK والـ AAB مع الحواشي المطلوبة
+      # 3. بناء الـ APK والـ AAB (App Bundle) معاً للإصدار النهائي
       - name: Build Android APK & AAB
         run: |
           flutter build apk --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}

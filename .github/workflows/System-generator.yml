@@ -1,4 +1,4 @@
-name: Najd AI Ultimate System Generator (Web, Android, iOS) 🚀
+name: Najd AI Ultimate System Generator (Android & iOS) 🚀
 
 on:
   repository_dispatch:
@@ -8,7 +8,8 @@ on:
       - main
 
 jobs:
-  build-android-and-web:
+  # --- بناء أنظمة الأندرويد (APK + App Bundle) ---
+  build-android:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -30,11 +31,7 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      # ❌ تم حذف خطوة Generate Launcher Icons من هنا لتفادي انهيار البناء بسب نقص ملفات الـ android والـ web
-
-      - name: Build Web
-        run: flutter build web --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
-
+      # بناء ملف الـ APK وتوليد الـ AAB لمتجر قوقل بلاي مباشرة
       - name: Build Android APK & AAB
         run: |
           flutter build apk --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
@@ -50,6 +47,7 @@ jobs:
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab
 
+  # --- بناء أنظمة الآيفون (IPA) ---
   build-ios:
     runs-on: macos-latest
     steps:
@@ -66,8 +64,6 @@ jobs:
 
       - name: Install Dependencies
         run: flutter pub get
-
-      # ❌ تم حذف خطوة Generate Launcher Icons من هنا أيضاً للآيفون
 
       - name: Build iOS IPA 🍏
         run: |

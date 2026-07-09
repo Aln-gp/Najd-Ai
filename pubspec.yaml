@@ -24,7 +24,7 @@ dev_dependencies:
 
 flutter_launcher_icons:
   android: "launcher_icon"
-  ios: true
+  ios: false # 👈 حولناها إلى false مؤقتاً عشان نتخطى خطأ مسارات الآيفون المفقودة
   image_path: "assets/logo.png"
   web:
     generate: true

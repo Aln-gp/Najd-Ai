@@ -27,43 +27,33 @@ jobs:
         with:
           channel: 'stable'
 
-      # 1. إنشاء مجلدات المنصات النظيفة
-      - name: Recreate Android & iOS Folders
-        run: |
-          rm -rf android ios
-          flutter create . --platforms=android,ios --org com.alnofaie.najdai
-
-      # 2. حقن الإجبار العالمي للمشروع والمكتبات الخارجية باستخدام الإصدار المستقر 34
-      - name: Inject Global SDK Overrides to Gradle
-        run: |
-          cat << 'EOF' >> android/build.gradle
-
-          subprojects {
-              afterEvaluate { project ->
-                  if (project.hasProperty('android')) {
-                      project.android {
-                          compileSdk 34
-                          defaultConfig {
-                              minSdk 23
-                              targetSdk 34
-                          }
-                      }
-                  }
-              }
-          }
-          EOF
-
-      # 3. تحميل مكاتب فلاتر بشكل رسمي وسليم
+      # ✅ بدون حذف - فقط تحديث
       - name: Install Dependencies
         run: flutter pub get
 
-      # 4. البناء الفعلي للنسخة النهائية المستقرة APK و AAB
+      # ✅ التحقق من الـ Secrets
+      - name: Verify Required Secrets
+        run: |
+          set -e
+          [ -n "${{ secrets.OPENROUTER_API_KEY }}" ] || { echo "❌ OPENROUTER_API_KEY مفقود"; exit 1; }
+          [ -n "${{ secrets.FIREBASE_WEB_API_KEY }}" ] || { echo "❌ FIREBASE_WEB_API_KEY مفقود"; exit 1; }
+          echo "✅ جميع الـ Secrets موجودة"
+
       - name: Build Android APK & AAB
         run: |
-          flutter build apk --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
-          flutter build appbundle --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
+          flutter build apk --release \
+            --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} \
+            --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
+          flutter build appbundle --release \
+            --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} \
+            --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
 
-      # 5. رفع الملفات الجاهزة إلى الريليز في قيت هب
+      - name: Verify Build Artifacts
+        run: |
+          [ -f build/app/outputs/flutter-apk/app-release.apk ] || { echo "❌ APK فشل"; exit 1; }
+          [ -f build/app/outputs/bundle/release/app-release.aab ] || { echo "❌ AAB فشل"; exit 1; }
+          echo "✅ البناء نجح"
+
       - name: Deploy Android Releases
         uses: softprops/action-gh-release@v2
         with:
@@ -88,20 +78,22 @@ jobs:
           channel: 'stable'
           architecture: x64
 
-      - name: Recreate iOS Folder
-        run: |
-          rm -rf ios
-          flutter create . --platforms=ios --org com.alnofaie.najdai
-
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Build iOS IPA 🍏
+      - name: Build iOS App
         run: |
-          flutter build ios --release --no-codesign --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
+          flutter build ios --release --no-codesign \
+            --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} \
+            --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
+
+      - name: Create iOS IPA Package
+        run: |
+          rm -rf Payload Najd_AI_iOS.ipa
           mkdir -p Payload
-          mv build/ios/iphoneos/Runner.app Payload/
-          zip -r Najd_AI_iOS.ipa Payload
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -r Najd_AI_iOS.ipa Payload/
+          echo "✅ IPA جاهز"
 
       - name: Deploy iOS Release
         uses: softprops/action-gh-release@v2

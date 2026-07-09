@@ -1,18 +1,19 @@
-buildscript {
-    ext.kotlin_version = '1.8.22'
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.0'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.google.gms:google-services:4.4.0'
-    }
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+    id "com.google.gms.google-services"
 }
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
+
+android {
+    namespace "com.Alnofaie.najdai"
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.Alnofaie.najdai"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
     }
 }

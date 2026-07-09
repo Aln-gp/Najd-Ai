@@ -27,13 +27,13 @@ jobs:
         with:
           channel: 'stable'
 
-      # 1. إنشاء مجلدات المنصات النظيفة والمعتمدة للبندل الخاص بك com.alnofaie.najdai
+      # 1. إنشاء مجلدات المنصات النظيفة
       - name: Recreate Android & iOS Folders
         run: |
           rm -rf android ios
           flutter create . --platforms=android,ios --org com.alnofaie.najdai
 
-      # 2. حقن الإجبار العالمي للمشروع والمكتبات الخارجية لتدعم من أندرويد 6 إلى أحدث إصدار (يحل مشكلة file_picker)
+      # 2. حقن الإجبار العالمي للمشروع والمكتبات الخارجية باستخدام الإصدار المستقر 34
       - name: Inject Global SDK Overrides to Gradle
         run: |
           cat << 'EOF' >> android/build.gradle
@@ -42,10 +42,10 @@ jobs:
               afterEvaluate { project ->
                   if (project.hasProperty('android')) {
                       project.android {
-                          compileSdk 36
+                          compileSdk 34
                           defaultConfig {
                               minSdk 23
-                              targetSdk 36
+                              targetSdk 34
                           }
                       }
                   }
@@ -110,4 +110,3 @@ jobs:
           tag_name: "v1.0.${{ github.run_number }}"
           name: "إصدار نجد AI المعتمد رقم ${{ github.run_number }} 🛠️"
           files: Najd_AI_iOS.ipa
-          

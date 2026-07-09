@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "44663663503",
+    "project_id": "najdai1",
+    "storage_bucket": "najdai1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:44663663503:android:6176474608e2ba548ff9fa",
+        "android_client_info": {
+          "package_name": "com.Alnofaie.najdai"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "44663663503-riu6k8f42hvqaingqns3m2tl3odpp9a5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcnQvKk7lFDnOelwb7lUItqc0lh3t97js"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "44663663503-riu6k8f42hvqaingqns3m2tl3odpp9a5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "44663663503-a4n9056o48219qde3fnpk703ondsg1qr.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.najd.ai"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

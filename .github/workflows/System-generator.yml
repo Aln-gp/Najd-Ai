@@ -1,0 +1,90 @@
+name: Najd AI Ultimate System Generator (Web, Android, iOS) 🚀
+
+on:
+  repository_dispatch:
+    types: [create_new_system]
+  push:
+    branches:
+      - main
+
+jobs:
+  # --- الشغل الأول: بناء الأندرويد والويب (على سيرفر لينكس) ---
+  build-android-and-web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Generate Launcher Icons
+        run: flutter pub run flutter_launcher_icons
+
+      - name: Build Web
+        run: flutter build web --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
+
+      - name: Build Android APK & AAB
+        run: |
+          flutter build apk --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
+          flutter build appbundle --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
+
+      - name: Deploy Android Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          tag_name: "v1.0.${{ github.run_number }}"
+          name: "إصدار نجد AI المعتمد رقم ${{ github.run_number }} 🛠️"
+          files: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+
+  # --- الشغل الثاني: بناء الآيفون (على سيرفر ماك الخاص) ---
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          architecture: x64
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Generate Launcher Icons
+        run: flutter pub run flutter_launcher_icons
+
+      - name: Build iOS IPA 🍏
+        run: |
+          flutter build ios --release --no-codesign --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
+          mkdir -p Payload
+          mv build/ios/iphoneos/Runner.app Payload/
+          zip -r Najd_AI_iOS.ipa Payload
+
+      - name: Deploy iOS Release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          tag_name: "v1.0.${{ github.run_number }}"
+          name: "إصدار نجد AI المعتمد رقم ${{ github.run_number }} 🛠️"
+          files: Najd_AI_iOS.ipa
+          

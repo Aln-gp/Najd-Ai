@@ -8,7 +8,6 @@ on:
       - main
 
 jobs:
-  # --- بناء أنظمة الأندرويد (APK + App Bundle) ---
   build-android:
     runs-on: ubuntu-latest
     steps:
@@ -26,12 +25,12 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.22.0' # 👈 حددنا هذا الإصدار المستقر عشان يتوافق مع ملفات الأندرويد القديمة والجديدة
           channel: 'stable'
 
       - name: Install Dependencies
         run: flutter pub get
 
-      # بناء ملف الـ APK وتوليد الـ AAB لمتجر قوقل بلاي مباشرة
       - name: Build Android APK & AAB
         run: |
           flutter build apk --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
@@ -47,7 +46,6 @@ jobs:
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab
 
-  # --- بناء أنظمة الآيفون (IPA) ---
   build-ios:
     runs-on: macos-latest
     steps:
@@ -59,6 +57,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.22.0' # 👈 نثبته هنا أيضاً للآيفون لتوحيد البيئة
           channel: 'stable'
           architecture: x64
 

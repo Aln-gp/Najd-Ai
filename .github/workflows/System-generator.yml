@@ -8,7 +8,6 @@ on:
       - main
 
 jobs:
-  # --- الشغل الأول: بناء الأندرويد والويب (على سيرفر لينكس) ---
   build-android-and-web:
     runs-on: ubuntu-latest
     steps:
@@ -31,8 +30,7 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Generate Launcher Icons
-        run: flutter pub run flutter_launcher_icons
+      # ❌ تم حذف خطوة Generate Launcher Icons من هنا لتفادي انهيار البناء بسب نقص ملفات الـ android والـ web
 
       - name: Build Web
         run: flutter build web --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
@@ -52,7 +50,6 @@ jobs:
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab
 
-  # --- الشغل الثاني: بناء الآيفون (على سيرفر ماك الخاص) ---
   build-ios:
     runs-on: macos-latest
     steps:
@@ -70,8 +67,7 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Generate Launcher Icons
-        run: flutter pub run flutter_launcher_icons
+      # ❌ تم حذف خطوة Generate Launcher Icons من هنا أيضاً للآيفون
 
       - name: Build iOS IPA 🍏
         run: |

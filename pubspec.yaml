@@ -1,5 +1,5 @@
 name: najd_ai
-description: "A new Flutter project created by Najd AI."
+description: "نظام وتطبيق نجد AI الموحد الشامل مع الحسابات والشعار"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -9,30 +9,29 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.5
-  http: ^1.1.0
-  flutter_tts: ^3.8.3
-  image_picker: ^1.0.4
-  file_picker: ^6.1.1
+  http: ^1.2.0
   firebase_core: ^2.24.2
-  firebase_auth: ^4.15.3
-  shared_preferences: ^2.2.2
-  url_launcher: ^6.2.2
+  firebase_auth: ^4.16.0
+  google_sign_in: ^6.1.6
+  image_picker: ^1.0.7 # مكتبة اختيار الصور من الاستوديو أو الكاميرا
+  file_picker: ^8.0.0  # مكتبة اختيار الملفات بجميع أنواعها
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
+  flutter_lints: ^3.0.0
   flutter_launcher_icons: ^0.13.1
 
-# إعدادات مسار صورتك الخاصة للتطبيق
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icon/app_icon.png"
+  image_path: "assets/logo.png"
+  web:
+    generate: true
+    image_path: "assets/logo.png"
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/icon/
+    - assets/
     

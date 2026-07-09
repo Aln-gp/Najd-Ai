@@ -27,23 +27,23 @@ jobs:
         with:
           channel: 'stable'
 
-      # 1. توليد المجلدات بالبندل المعتمد حقك
+      # 1. توليد المجلدات بالبندل المعتمد com.alnofaie.najdai
       - name: Recreate Android & iOS Folders
         run: |
           echo "جاري إعادة بناء مجلدات المنصات..."
           rm -rf android ios
           flutter create . --platforms=android,ios --org com.alnofaie.najdai
 
-      # 2. خطوة الفزعة: إجبار المشروع والمكاتب على استخدام Android SDK 34
+      # 2. حقن إعدادات الـ SDK إلى 34 لحل تعارض file_picker
       - name: Force Android SDK 34
         run: |
-          echo "جاري تعديل إعدادات الـ SDK إلى 34 لمنع تعارض file_picker..."
+          echo "جاري تعديل إعدادات الـ SDK إلى 34..."
           echo "subprojects { afterEvaluate { project -> if (project.hasProperty('android')) { project.android { compileSdk 34 } } } }" >> android/build.gradle
 
-       Tar - name: Install Dependencies
+      - name: Install Dependencies
         run: flutter pub get
 
-      # 3. بناء الـ APK والـ AAB سوا
+      # 3. بناء الـ APK والـ AAB مع الحواشي المطلوبة
       - name: Build Android APK & AAB
         run: |
           flutter build apk --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}

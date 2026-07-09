@@ -25,20 +25,13 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable' # رجعنا لأحدث إصدار مستقر ليتوافق مع مكتباتك الحديثة مثل http
+          channel: 'stable'
 
-      # 🪄 خطوة سحرية لإصلاح الـ v1 embedding وتحديث ملف MainActivity تلقائياً ليعمل على الإصدارات الحديثة
-      - name: Fix Android v1 embedding issue
+      # 🛠️ الفزعة الأكيدة: إعادة توليد مجلدات النظام (android, ios) لتفادي أي نقص في الملفات
+      - name: Recreate Missing Platform Folders
         run: |
-          MAIN_ACTIVITY_PATH=$(find android/app/src/main -name "MainActivity.kt" -o -name "MainActivity.java")
-          if [ -f "$MAIN_ACTIVITY_PATH" ]; then
-            echo "جاري تحديث MainActivity إلى v2 embedding..."
-            if [[ "$MAIN_ACTIVITY_PATH" == *.kt ]]; then
-              echo -e "package com.example.najd_ai\n\nimport io.flutter.embedding.android.FlutterActivity\n\nclass MainActivity: FlutterActivity() {\n}" > "$MAIN_ACTIVITY_PATH"
-            else
-              echo -e "package com.example.najd_ai;\n\nimport io.flutter.embedding.android.FlutterActivity;\n\npublic class MainActivity extends FlutterActivity {\n}" > "$MAIN_ACTIVITY_PATH"
-            fi
-          fi
+          echo "جاري توليد وإصلاح مجلدات النظام الافتراضية..."
+          flutter create . --platforms=android,ios
 
       - name: Install Dependencies
         run: flutter pub get
@@ -72,6 +65,10 @@ jobs:
           channel: 'stable'
           architecture: x64
 
+      # 🛠️ إعادة توليد ملفات الآيفون هنا أيضاً للتأكيد لضمان عدم حدوث نقص
+      - name: Recreate Missing iOS Folder
+        run: flutter create . --platforms=ios
+
       - name: Install Dependencies
         run: flutter pub get
 
@@ -89,4 +86,3 @@ jobs:
           tag_name: "v1.0.${{ github.run_number }}"
           name: "إصدار نجد AI المعتمد رقم ${{ github.run_number }} 🛠️"
           files: Najd_AI_iOS.ipa
-          

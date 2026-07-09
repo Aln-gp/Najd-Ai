@@ -27,18 +27,17 @@ jobs:
         with:
           channel: 'stable'
 
-      # 1. إنشاء مجلدات المنصات النظيفة
+      # 1. إنشاء مجلدات المنصات النظيفة والمعتمدة للبندل الخاص بك com.alnofaie.najdai
       - name: Recreate Android & iOS Folders
         run: |
           rm -rf android ios
           flutter create . --platforms=android,ios --org com.alnofaie.najdai
 
-      # 2. الحل المحلي الأقوى: إجبار الجرادل الرئيسي والمكتبات الفرعية على إصداراتك (أندرويد 6 إلى 16/17)
+      # 2. حقن الإجبار العالمي للمشروع والمكتبات الخارجية لتدعم من أندرويد 6 إلى أحدث إصدار (يحل مشكلة file_picker)
       - name: Inject Global SDK Overrides to Gradle
         run: |
           cat << 'EOF' >> android/build.gradle
 
-          // سكريبت محلي يجبر المشروع وكل المكتبات الخارجية (مثل file_picker) على نفس الإصدارات
           subprojects {
               afterEvaluate { project ->
                   if (project.hasProperty('android')) {
@@ -54,15 +53,17 @@ jobs:
           }
           EOF
 
-       Silber - name: Install Dependencies
+      # 3. تحميل مكاتب فلاتر بشكل رسمي وسليم
+      - name: Install Dependencies
         run: flutter pub get
 
-      # 3. البناء المستقر والمباشر
+      # 4. البناء الفعلي للنسخة النهائية المستقرة APK و AAB
       - name: Build Android APK & AAB
         run: |
           flutter build apk --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
           flutter build appbundle --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
 
+      # 5. رفع الملفات الجاهزة إلى الريليز في قيت هب
       - name: Deploy Android Releases
         uses: softprops/action-gh-release@v2
         with:

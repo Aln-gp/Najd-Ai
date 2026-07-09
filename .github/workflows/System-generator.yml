@@ -27,37 +27,42 @@ jobs:
         with:
           channel: 'stable'
 
-      # 1. إنشاء مجلدات الأندرويد والـ iOS بشكل نظيف تماماً
+      # 1. إنشاء مجلدات المنصات النظيفة
       - name: Recreate Android & iOS Folders
         run: |
           rm -rf android ios
           flutter create . --platforms=android,ios --org com.alnofaie.najdai
 
-      - name: Install Dependencies
+      # 2. الحل المحلي الأقوى: إجبار الجرادل الرئيسي والمكتبات الفرعية على إصداراتك (أندرويد 6 إلى 16/17)
+      - name: Inject Global SDK Overrides to Gradle
+        run: |
+          cat << 'EOF' >> android/build.gradle
+
+          // سكريبت محلي يجبر المشروع وكل المكتبات الخارجية (مثل file_picker) على نفس الإصدارات
+          subprojects {
+              afterEvaluate { project ->
+                  if (project.hasProperty('android')) {
+                      project.android {
+                          compileSdk 36
+                          defaultConfig {
+                              minSdk 23
+                              targetSdk 36
+                          }
+                      }
+                  }
+              }
+          }
+          EOF
+
+       Silber - name: Install Dependencies
         run: flutter pub get
 
-      # 2. بناء الـ APK والـ AAB محلياً مع إجبار السيرفر على الإصدارات المطلوبة (من أندرويد 6 إلى أحدث إصدار)
-      - name: Build Android APK & AAB with Custom SDKs
+      # 3. البناء المستقر والمباشر
+      - name: Build Android APK & AAB
         run: |
-          flutter build apk --release \
-            --config-only \
-            --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} \
-            --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
-          
-          # البناء الفعلي باستخدام التمرير المحلي المباشر لجرادل لضمان عدم حدوث أي خطأ ملفات
-          cd android
-          ./gradlew assembleRelease \
-            -PtargetSdkVersion=36 \
-            -PcompileSdkVersion=36 \
-            -PminSdkVersion=23
-          
-          ./gradlew bundleRelease \
-            -PtargetSdkVersion=36 \
-            -PcompileSdkVersion=36 \
-            -PminSdkVersion=23
-          cd ..
+          flutter build apk --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
+          flutter build appbundle --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
 
-      # 3. رفع الملفات الجاهزة والمستقرة
       - name: Deploy Android Releases
         uses: softprops/action-gh-release@v2
         with:

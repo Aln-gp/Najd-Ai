@@ -27,29 +27,37 @@ jobs:
         with:
           channel: 'stable'
 
-      # 1. إنشاء مجلدات المشروع النظيفة بالبندل المعتمد com.alnofaie.najdai
+      # 1. إنشاء مجلدات الأندرويد والـ iOS بشكل نظيف تماماً
       - name: Recreate Android & iOS Folders
         run: |
           rm -rf android ios
           flutter create . --platforms=android,ios --org com.alnofaie.najdai
 
-      # 2. ضبط توافق أندرويد بالملّي: الحد الأدنى أندرويد 6 (23) والأقصى أندرويد 16/17 (36)
-      - name: Configure Android SDK Versions
-        run: |
-          echo "جاري ضبط إصدارات الأندرويد لتدعم من إصدار 6 إلى أحدث إصدار..."
-          sed -i 's/compileSdk = .*/compileSdk = 36/g' android/app/build.gradle
-          sed -i 's/minSdk = .*/minSdk = 23/g' android/app/build.gradle
-          sed -i 's/targetSdk = .*/targetSdk = 36/g' android/app/build.gradle
-
       - name: Install Dependencies
         run: flutter pub get
 
-      # 3. بناء الـ APK والـ AAB (App Bundle) معاً للإصدار النهائي
-      - name: Build Android APK & AAB
+      # 2. بناء الـ APK والـ AAB محلياً مع إجبار السيرفر على الإصدارات المطلوبة (من أندرويد 6 إلى أحدث إصدار)
+      - name: Build Android APK & AAB with Custom SDKs
         run: |
-          flutter build apk --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
-          flutter build appbundle --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
+          flutter build apk --release \
+            --config-only \
+            --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} \
+            --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
+          
+          # البناء الفعلي باستخدام التمرير المحلي المباشر لجرادل لضمان عدم حدوث أي خطأ ملفات
+          cd android
+          ./gradlew assembleRelease \
+            -PtargetSdkVersion=36 \
+            -PcompileSdkVersion=36 \
+            -PminSdkVersion=23
+          
+          ./gradlew bundleRelease \
+            -PtargetSdkVersion=36 \
+            -PcompileSdkVersion=36 \
+            -PminSdkVersion=23
+          cd ..
 
+      # 3. رفع الملفات الجاهزة والمستقرة
       - name: Deploy Android Releases
         uses: softprops/action-gh-release@v2
         with:

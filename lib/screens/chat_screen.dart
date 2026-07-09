@@ -1,10 +1,4 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
-import '../services/api_service.dart';
-import 'login_screen.dart';
+import 'package:flutter/flutter.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -14,168 +8,89 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final TextEditingController _controller = TextEditingController();
-  final List<Map<String, String>> _messages = [];
-  bool _isActive = true;
-  bool _isLoading = false;
-  
-  File? _selectedImage;
-  String? _selectedFileName;
-  String? _imageBase64;
+  final TextEditingController _messageController = TextEditingController();
+  final List<Map<String, dynamic>> _messages = [];
 
-  final ImagePicker _picker = ImagePicker();
-
-  @override
-  void initState() {
-    super.initState();
-    _verifyStatus();
-  }
-
-  Future<void> _verifyStatus() async {
-    bool status = await ApiService.checkAppStatus();
-    setState(() { _isActive = status; });
-  }
-
-  // دالة اختيار صورة من الاستوديو
-  Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      final bytes = await image.readAsBytes();
-      setState(() {
-        _selectedImage = File(image.path);
-        _selectedFileName = null; // نلغي الملف لو كان فيه ملف مختار سابقاً
-        _imageBase64 = base64Encode(bytes);
-      });
-    }
-  }
-
-  // دالة اختيار ملف (كود، PDF، إلخ)
-  Future<void> _pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.any,
-    );
-
-    if (result != null && result.files.single.path != null) {
-      File file = File(result.files.single.path!);
-      final bytes = await file.readAsBytes();
-      setState(() {
-        _selectedFileName = result.files.single.name;
-        _selectedImage = null; // نلغي الصورة لو كانت مختارة سابقاً
-        _imageBase64 = base64Encode(bytes); // نمرر محتوى الملف كمستند مشفر للـ AI
-      });
-    }
-  }
-
-  Future<void> _sendMessage() async {
-    if (_controller.text.trim().isEmpty && _imageBase64 == null) return;
-
-    String userText = _controller.text;
-    if (userText.isEmpty && _selectedFileName != null) {
-      userText = "أرسل ملفاً: $_selectedFileName";
-    } else if (userText.isEmpty && _selectedImage != null) {
-      userText = "أرسل صورة";
-    }
-
+  void _sendMessage() {
+    if (_messageController.text.trim().isEmpty) return;
+    
     setState(() {
-      _messages.add({'role': 'user', 'text': userText});
-      _isLoading = true;
-      _controller.clear();
+      _messages.add({
+        'text': _messageController.text.trim(),
+        'isUser': true,
+        'time': DateTime.now().toString().substring(11, 16),
+      });
     });
-
-    // إرسال النص مع البيانات المشفرة للصورة أو الملف لـ نجد AI
-    String aiResponse = await ApiService.askNajdAI(userText, imageBase64: _imageBase64);
-
-    setState(() {
-      _messages.add({'role': 'najd', 'text': aiResponse});
-      _isLoading = false;
-      // تصغير وتصفير المرفقات بعد الإرسال
-      _selectedImage = null;
-      _selectedFileName = null;
-      _imageBase64 = null;
-    });
+    
+    _messageController.clear();
+    
+    // هنا يمكنك إضافة منطق إرسال الرسالة إلى الـ AI (Najd AI API / OpenRouter)
+    _simulateAIResponse();
   }
 
-  // قائمة الخيارات المنسدلة عند الضغط على زر الـ +
-  void _showAttachmentMenu() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF2C2C2C),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.image, color: Colors.amber),
-                title: const Text('إرسال صورة من الاستوديو', style: TextStyle(color: Colors.white)),
-                onPressed: () {
-                  Navigator.pop(context);
-                  _pickImage();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.insert_drive_file, color: Colors.amber),
-                title: const Text('إرسال ملف أو كود برمي', style: TextStyle(color: Colors.white)),
-                onPressed: () {
-                  Navigator.pop(context);
-                  _pickFile();
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
+  void _simulateAIResponse() {
+    Future.delayed(const Duration(seconds: 1), () {
+      if (!mounted) return;
+      setState(() {
+        _messages.add({
+          'text': 'أبشر يا خوي، أنا نجد AI فزعتك وجاهز لأي خدمة! 🌾🔥',
+          'isUser': false,
+          'time': DateTime.now().toString().substring(11, 16),
+        });
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_isActive) {
-      return const Scaffold(
-        body: Center(
-          child: Text(
-            'التطبيق قيد الصيانة حالياً بطلب من المطور 🛠️\nبنزين المجلس ونرجع لكم قريب!',
-            style: TextStyle(fontSize: 20, color: Colors.red, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('مجلس نجد AI 🌾'),
+        title: const Text(
+          'محادثة نجد AI 🚀',
+          style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+        ),
+        centerTitle: true,
         backgroundColor: Colors.amber[800],
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            onPressed: () async {
-              await AuthService().signOut();
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
-            },
-          )
-        ],
+        foregroundColor: Colors.white,
       ),
       body: Column(
         children: [
+          // قائمة الرسائل
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
-                bool isUser = _messages[index]['role'] == 'user';
+                final message = _messages[index];
+                final isUser = message['isUser'] as bool;
+                
                 return Align(
-                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft;
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 5),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isUser ? Colors.amber[700] : Colors.grey[800],
-                      borderRadius: BorderRadius.circular(12),
+                      color: isUser ? Colors.amber[100] : Colors.grey[200],
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(12),
+                        topRight: const Radius.circular(12),
+                        bottomLeft: Radius.circular(isUser ? 12 : 0),
+                        bottomRight: Radius.circular(isUser ? 0 : 12),
+                      ),
                     ),
-                    child: Text(
-                      _messages[index]['text']!,
-                      style: const TextStyle(fontSize: 16, color: Colors.white),
+                    child: Column(
+                      crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          message['text'],
+                          style: const TextStyle(fontSize: 15, fontFamily: 'Tajawal'),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          message['time'],
+                          style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -183,61 +98,53 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           
-          // شريط معاينة المرفق قبل الضغط على إرسال
-          if (_selectedImage != null || _selectedFileName != null)
-            Container(
-              padding: const EdgeInsets.all(8),
-              color: Colors.black26,
-              child: Row(
-                children: [
-                  const Icon(Icons.attach_file, color: Colors.amber),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      _selectedImage != null ? "صورة مختارة جاهزة للفحص 📸" : _selectedFileName!,
-                      style: const TextStyle(color: Colors.white70),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.red),
-                    onPressed: () {
-                      setState(() {
-                        _selectedImage = null;
-                        _selectedFileName = null;
-                        _imageBase64 = null;
-                      });
-                    },
-                  )
-                ],
-              ),
+          // خيارات سريعة للمستخدم (استخدام onTap بدلاً من onPressed لتفادي الخطأ)
+          Container(
+            color: Colors.grey[50],
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.flash_on, color: Colors.orange),
+                  title: const Text('اكتب لي شيلة فخر عن آل نفاية دويتو عتيبه 🌾'),
+                  onTap: () { // 👈 تم التعديل هنا إلى onTap وهي الصحيحة للـ ListTile
+                    _messageController.text = 'اكتب لي شيلة فخر عن آل نفاية دويتو عتيبه 🌾';
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.code, color: Colors.blue),
+                  title: const Text('ساعدني في حل مشكلة برمجة في فلاتر 🛠️'),
+                  onTap: () { // 👈 تم التعديل هنا أيضاً إلى onTap لمنع انهيار البناء
+                    _messageController.text = 'ساعدني في حل مشكلة برمجة في فلاتر 🛠️';
+                  },
+                ),
+              ],
             ),
-
-          if (_isLoading) const Padding(padding: EdgeInsets.all(8.0), child: CircularProgressIndicator(color: Colors.amber)),
+          ),
           
-          // صندوق الإرسال المطور مع زر الـ +
+          // حقل إدخال الرسالة
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
-                    controller: _controller,
+                    controller: _messageController,
                     decoration: InputDecoration(
-                      hintText: 'وش في خاطرك؟ أبشر بسعدك...',
-                      prefixIcon: IconButton(
-                        icon: const Icon(Icons.add, color: Colors.amber, size: 28), // زر الزائد الذكي
-                        onPressed: _showAttachmentMenu,
+                      hintText: 'اكتب رسالتك لنجد AI...',
+                      hintStyle: const TextStyle(fontFamily: 'Tajawal'),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
                       ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
-                FloatingActionButton(
+                IconButton(
+                  icon: const Icon(Icons.send),
+                  color: Colors.amber[800],
                   onPressed: _sendMessage,
-                  backgroundColor: Colors.amber[800],
-                  child: const Icon(Icons.send),
                 ),
               ],
             ),
@@ -245,5 +152,11 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
   }
 }

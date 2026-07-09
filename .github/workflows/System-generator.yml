@@ -25,8 +25,20 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.10.6' # 👈 هذا الإصدار سيدعم كود الـ v1 المكتوب في تطبيقك القديم ويمرر البناء
-          channel: 'stable'
+          channel: 'stable' # رجعنا لأحدث إصدار مستقر ليتوافق مع مكتباتك الحديثة مثل http
+
+      # 🪄 خطوة سحرية لإصلاح الـ v1 embedding وتحديث ملف MainActivity تلقائياً ليعمل على الإصدارات الحديثة
+      - name: Fix Android v1 embedding issue
+        run: |
+          MAIN_ACTIVITY_PATH=$(find android/app/src/main -name "MainActivity.kt" -o -name "MainActivity.java")
+          if [ -f "$MAIN_ACTIVITY_PATH" ]; then
+            echo "جاري تحديث MainActivity إلى v2 embedding..."
+            if [[ "$MAIN_ACTIVITY_PATH" == *.kt ]]; then
+              echo -e "package com.example.najd_ai\n\nimport io.flutter.embedding.android.FlutterActivity\n\nclass MainActivity: FlutterActivity() {\n}" > "$MAIN_ACTIVITY_PATH"
+            else
+              echo -e "package com.example.najd_ai;\n\nimport io.flutter.embedding.android.FlutterActivity;\n\npublic class MainActivity extends FlutterActivity {\n}" > "$MAIN_ACTIVITY_PATH"
+            fi
+          fi
 
       - name: Install Dependencies
         run: flutter pub get
@@ -57,7 +69,6 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.10.6' # 👈 توحيد الإصدار هنا أيضاً لضمان التوافق الكامل
           channel: 'stable'
           architecture: x64
 

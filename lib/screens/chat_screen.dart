@@ -1,4 +1,4 @@
-import 'package:flutter/flutter.dart';
+import 'package:flutter/material.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -10,6 +10,30 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final List<Map<String, dynamic>> _messages = [];
+
+  // دالة اختيار الصور (Photo Picker)
+  void _pickPhoto() {
+    // هنا يمكنك استدعاء ImagePicker مستقبلاً، حالياً يطبع رسالة تأكيد لتفادي نقص المكاتب
+    setState(() {
+      _messages.add({
+        'text': '📸 تم اختيار صورة لإرسالها...',
+        'isUser': true,
+        'time': DateTime.now().toString().substring(11, 16),
+      });
+    });
+  }
+
+  // دالة اختيار الملفات (File Picker)
+  void _pickFile() {
+    // هنا يمكنك استدعاء FilePicker مستقبلاً
+    setState(() {
+      _messages.add({
+        'text': '📁 تم اختيار ملف لإرساله...',
+        'isUser': true,
+        'time': DateTime.now().toString().substring(11, 16),
+      });
+    });
+  }
 
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
@@ -23,8 +47,6 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     
     _messageController.clear();
-    
-    // هنا يمكنك إضافة منطق إرسال الرسالة إلى الـ AI (Najd AI API / OpenRouter)
     _simulateAIResponse();
   }
 
@@ -33,7 +55,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (!mounted) return;
       setState(() {
         _messages.add({
-          'text': 'أبشر يا خوي، أنا نجد AI فزعتك وجاهز لأي خدمة! 🌾🔥',
+          'text': 'أبشر يا خوي، استلمت مرفقاتك وجاري معالجتها بنجد AI! 🌾🔥',
           'isUser': false,
           'time': DateTime.now().toString().substring(11, 16),
         });
@@ -55,7 +77,6 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
-          // قائمة الرسائل
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(12),
@@ -65,7 +86,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 final isUser = message['isUser'] as bool;
                 
                 return Align(
-                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft;
+                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 5),
                     padding: const EdgeInsets.all(12),
@@ -98,7 +119,6 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           
-          // خيارات سريعة للمستخدم (استخدام onTap بدلاً من onPressed لتفادي الخطأ)
           Container(
             color: Colors.grey[50],
             child: Column(
@@ -106,7 +126,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ListTile(
                   leading: const Icon(Icons.flash_on, color: Colors.orange),
                   title: const Text('اكتب لي شيلة فخر عن آل نفاية دويتو عتيبه 🌾'),
-                  onTap: () { // 👈 تم التعديل هنا إلى onTap وهي الصحيحة للـ ListTile
+                  onTap: () {
                     _messageController.text = 'اكتب لي شيلة فخر عن آل نفاية دويتو عتيبه 🌾';
                   },
                 ),
@@ -114,7 +134,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ListTile(
                   leading: const Icon(Icons.code, color: Colors.blue),
                   title: const Text('ساعدني في حل مشكلة برمجة في فلاتر 🛠️'),
-                  onTap: () { // 👈 تم التعديل هنا أيضاً إلى onTap لمنع انهيار البناء
+                  onTap: () {
                     _messageController.text = 'ساعدني في حل مشكلة برمجة في فلاتر 🛠️';
                   },
                 ),
@@ -122,11 +142,26 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           
-          // حقل إدخال الرسالة
+          // حقل الإدخال مع أزرار الـ Picker الجديدة
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
+                // زر اختيار الملفات
+                IconButton(
+                  icon: const Icon(Icons.attach_file),
+                  color: Colors.grey[700],
+                  onPressed: _pickFile,
+                  tooltip: 'اختيار ملف',
+                ),
+                // زر اختيار الصور
+                IconButton(
+                  icon: const Icon(Icons.image),
+                  color: Colors.grey[700],
+                  onPressed: _pickPhoto,
+                  tooltip: 'اختيار صورة',
+                ),
+                const SizedBox(width: 4),
                 Expanded(
                   child: TextField(
                     controller: _messageController,

@@ -27,28 +27,31 @@ jobs:
         with:
           channel: 'stable'
 
-      # توليد مجلد أندرويد نظيف ومتوافق 100% بمعرّف الحزمة الخاص بك com.alnofaie.najdai
+      # توليد المجلدات النظيفة بالبندل المعتمد com.alnofaie.najdai
       - name: Recreate Android & iOS Folders
         run: |
-          echo "جاري إعادة بناء مجلدات المنصات بالبندل الجديد..."
+          echo "جاري إعادة بناء مجلدات المنصات بشكل صحيح..."
           rm -rf android ios
           flutter create . --platforms=android,ios --org com.alnofaie.najdai
 
       - name: Install Dependencies
         run: flutter pub get
 
-      # بناء الـ APK مباشرة
-      - name: Build Android APK
+      # بناء الـ APK والـ AAB (App Bundle) مع بعض عشان ترفعها للمتجر ولصاحبك
+      - name: Build Android APK & AAB
         run: |
           flutter build apk --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
+          flutter build appbundle --release --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
 
-      - name: Deploy Android Release
+      - name: Deploy Android Releases
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GH_TOKEN }}
           tag_name: "v1.0.${{ github.run_number }}"
           name: "إصدار نجد AI المعتمد رقم ${{ github.run_number }} 🛠️"
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
 
   build-ios:
     runs-on: macos-latest

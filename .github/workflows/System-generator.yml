@@ -14,7 +14,6 @@ jobs:
   build-android:
     runs-on: ubuntu-latest
     container:
-      # تم التحديث للحاوية الرسمية النشطة والحديثة اللي تدعم Dart 3.0+
       image: ghcr.io/cirruslabs/flutter:stable
     steps:
       - name: Checkout Code
@@ -22,17 +21,24 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
 
-      # 1. تطهير وبناء الهيكل الجديد مع اسم مشروع صحيح ومتوافق
+      # 1. تطهير وبناء الهيكل الجديد بالاسم الصحيح للحزمة
       - name: Clean & Fresh Structure
         run: |
           rm -rf android ios
-          flutter create . --project-name=najd_ai --platforms=android --org com.alnofaie.najdai
+          flutter create . --project-name=blink --platforms=android --org com.blacklink
 
-      # 2. تحميل المكاتب في البيئة النظيفة (الحين بيقبل لأن الـ SDK حديث)
+      # 2. خطوة الحقن الإجبارية: رفع إصدار SDK إلى 36 للتطبيق وجميع المكاتب (حل مشكلة file_picker)
+      - name: Override Android SDK to 36
+        run: |
+          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/g' android/app/build.gradle
+          sed -i 's/targetSdk = flutter.targetSdkVersion/targetSdk = 36/g' android/app/build.gradle
+          echo "subprojects { afterEvaluate { project -> if (project.hasProperty('android')) { project.android { compileSdkVersion 36 } } } }" >> android/build.gradle
+
+      # 3. تحميل المكاتب
       - name: Fetch Dependencies
         run: flutter pub get
 
-      # 3. البناء المباشر للملفات
+      # 4. البناء المباشر للملفات
       - name: Build Production APK & AAB
         run: |
           flutter build apk --release \
@@ -43,7 +49,7 @@ jobs:
             --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} \
             --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
 
-      # 4. رفع الملفات الجاهزة للريليز
+      # 5. رفع الملفات الجاهزة للريليز
       - name: Deploy Android Artifacts
         uses: softprops/action-gh-release@v2
         with:
@@ -71,7 +77,7 @@ jobs:
       - name: Fresh iOS Rebase
         run: |
           rm -rf ios
-          flutter create . --project-name=najd_ai --platforms=ios --org com.alnofaie.najdai
+          flutter create . --project-name=blink --platforms=ios --org com.blacklink
 
       - name: Fetch Dependencies
         run: flutter pub get
@@ -92,4 +98,3 @@ jobs:
           tag_name: "v1.0.${{ github.run_number }}"
           name: "إصدار نجد AI المعتمد رقم ${{ github.run_number }} 🛠️"
           files: Najd_AI_iOS.ipa
-          

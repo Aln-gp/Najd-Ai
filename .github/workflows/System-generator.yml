@@ -14,20 +14,21 @@ jobs:
   build-android:
     runs-on: ubuntu-latest
     container:
-      image: cirrusci/flutter:stable
+      # تم التحديث للحاوية الرسمية النشطة والحديثة اللي تدعم Dart 3.0+
+      image: ghcr.io/cirruslabs/flutter:stable
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_TOKEN }}
 
-      # 1. تطهير كلي للمجلدات وبناء الهيكل الجديد مع إجبار اسم المشروع على صيغة صحيحة (najd_ai)
+      # 1. تطهير وبناء الهيكل الجديد مع اسم مشروع صحيح ومتوافق
       - name: Clean & Fresh Structure
         run: |
           rm -rf android ios
           flutter create . --project-name=najd_ai --platforms=android --org com.alnofaie.najdai
 
-      # 2. تحميل المكاتب في البيئة النظيفة
+      # 2. تحميل المكاتب في البيئة النظيفة (الحين بيقبل لأن الـ SDK حديث)
       - name: Fetch Dependencies
         run: flutter pub get
 
@@ -67,7 +68,6 @@ jobs:
           channel: 'stable'
           architecture: x64
 
-      # إصلاح نفس المشكلة في خطوة الـ iOS
       - name: Fresh iOS Rebase
         run: |
           rm -rf ios

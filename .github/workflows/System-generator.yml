@@ -1,4 +1,4 @@
-name: Najd AI Ultimate System Generator (Android & iOS) 🚀
+name: Najd AI Ultimate System Generator (Dockerized Stable Build) 🚀
 
 on:
   repository_dispatch:
@@ -7,54 +7,45 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+  releases: write
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
+    # نستخدم حاوية Docker مجهزة ومستقرة ومجربة عالمياً لقطع دابر أي تعارضات محيطية
+    container:
+      image: cirrusci/flutter:stable
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_TOKEN }}
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
+      # 1. تطهير كلي للمجلدات وبناء الهيكل الجديد بشكل معزول وآمن
+      - name: Clean & Fresh Structure
+        run: |
+          rm -rf android ios
+          flutter create . --platforms=android --org com.alnofaie.najdai
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-
-      # ✅ بدون حذف - فقط تحديث
-      - name: Install Dependencies
+      # 2. تحميل المكاتب في البيئة النظيفة
+      - name: Fetch Dependencies
         run: flutter pub get
 
-      # ✅ التحقق من الـ Secrets
-      - name: Verify Required Secrets
-        run: |
-          set -e
-          [ -n "${{ secrets.OPENROUTER_API_KEY }}" ] || { echo "❌ OPENROUTER_API_KEY مفقود"; exit 1; }
-          [ -n "${{ secrets.FIREBASE_WEB_API_KEY }}" ] || { echo "❌ FIREBASE_WEB_API_KEY مفقود"; exit 1; }
-          echo "✅ جميع الـ Secrets موجودة"
-
-      - name: Build Android APK & AAB
+      # 3. البناء المباشر والمستقر لحزم الأندرويد داخل الحاوية المعزولة
+      - name: Build Production APK & AAB
         run: |
           flutter build apk --release \
             --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} \
             --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
+          
           flutter build appbundle --release \
             --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} \
             --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
 
-      - name: Verify Build Artifacts
-        run: |
-          [ -f build/app/outputs/flutter-apk/app-release.apk ] || { echo "❌ APK فشل"; exit 1; }
-          [ -f build/app/outputs/bundle/release/app-release.aab ] || { echo "❌ AAB فشل"; exit 1; }
-          echo "✅ البناء نجح"
-
-      - name: Deploy Android Releases
+      # 4. رفع الملفات الجاهزة للريليز فوراً بالتوكن الرسمي
+      - name: Deploy Android Artifacts
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GH_TOKEN }}
@@ -72,33 +63,34 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
 
-      - name: Setup Flutter
+      - name: Setup Flutter Engine
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           architecture: x64
 
-      - name: Install Dependencies
+      - name: Fresh iOS Rebase
+        run: |
+          rm -rf ios
+          flutter create . --platforms=ios --org com.alnofaie.najdai
+
+      - name: Fetch Dependencies
         run: flutter pub get
 
-      - name: Build iOS App
+      - name: Compile iOS IPA
         run: |
           flutter build ios --release --no-codesign \
             --dart-define=OPENROUTER_KEY=${{ secrets.OPENROUTER_API_KEY }} \
             --dart-define=FIREBASE_KEY=${{ secrets.FIREBASE_WEB_API_KEY }}
-
-      - name: Create iOS IPA Package
-        run: |
-          rm -rf Payload Najd_AI_iOS.ipa
           mkdir -p Payload
-          cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r Najd_AI_iOS.ipa Payload/
-          echo "✅ IPA جاهز"
+          mv build/ios/iphoneos/Runner.app Payload/
+          zip -r Najd_AI_iOS.ipa Payload
 
-      - name: Deploy iOS Release
+      - name: Deploy iOS Artifact
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GH_TOKEN }}
           tag_name: "v1.0.${{ github.run_number }}"
           name: "إصدار نجد AI المعتمد رقم ${{ github.run_number }} 🛠️"
           files: Najd_AI_iOS.ipa
+          

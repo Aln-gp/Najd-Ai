@@ -9,12 +9,10 @@ on:
 
 permissions:
   contents: write
-  releases: write
 
 jobs:
   build-android:
     runs-on: ubuntu-latest
-    # نستخدم حاوية Docker مجهزة ومستقرة ومجربة عالمياً لقطع دابر أي تعارضات محيطية
     container:
       image: cirrusci/flutter:stable
     steps:
